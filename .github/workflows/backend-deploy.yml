@@ -16,22 +16,22 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'  # Recommended LTS version
+          cache: 'npm'        # Caches node_modules for faster runs
 
       - name: Install dependencies
         run: |
           cd server
-          npm install
+          npm ci --prefer-offline  # Uses package-lock.json for reproducible builds
 
-      - name: Run backend tests
+      - name: Run tests
         run: |
           cd server
           npm test
 
-      - name: Deploy to Heroku
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: your-heroku-app-name
-          heroku_email: your-email@example.com
-          usedocker: false
+      - name: Trigger Render Deploy Hook
+        run: |
+          curl -X POST \
+            "https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Accept: application/json"
